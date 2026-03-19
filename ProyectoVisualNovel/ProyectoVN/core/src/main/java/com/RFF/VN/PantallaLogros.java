@@ -5,9 +5,12 @@ import java.util.List;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Cursor;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.ScrollPane;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
@@ -24,6 +27,8 @@ public class PantallaLogros implements Screen{
 	private Skin skin;
 	private Repository repository;
 	
+	private Image fondo;
+	
 	public PantallaLogros(Main game) {
 		this.game = game;
 		this.repository = new Repository();
@@ -38,8 +43,17 @@ public class PantallaLogros implements Screen{
 	
 	@Override
 	public void show() {
+		//Gdx.input.setCursorCatched(false);
+		//Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
+		
 		Gdx.input.setInputProcessor(stage);
 		
+		game.controlarMusicaMenu("musica_menus.mp3", true);
+
+	    fondo = new Image(new Texture(Gdx.files.internal("fondos/fondo_menu_logros.png")));
+	    fondo.setFillParent(true);
+	    stage.addActor(fondo);
+	    
 		Table mainTable = new Table();
 		mainTable.setFillParent(true);
 		stage.addActor(mainTable);
@@ -94,7 +108,7 @@ public class PantallaLogros implements Screen{
 	
 	@Override
 	public void render(float delta) {
-		ScreenUtils.clear(0.05f,0.05f,0.1f,1);
+		ScreenUtils.clear(0,0,0,1);
 		stage.act(delta);
 		stage.draw();
 	}

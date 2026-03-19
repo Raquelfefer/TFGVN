@@ -14,8 +14,6 @@ public class ConexionBD {
 		try {
 			Class.forName("org.mariadb.jdbc.Driver");
 			con = DriverManager.getConnection(URL,USER,PASS);
-			System.out.println("¡CONEXIÓN EXITOSA CON DOCKER!");
-			
 		}catch (Exception e) {
 			System.out.println("Error de conexión: " + e.getMessage());
 			e.printStackTrace();

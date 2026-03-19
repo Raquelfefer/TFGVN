@@ -2,9 +2,12 @@ package com.RFF.VN;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.graphics.Cursor;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -20,6 +23,8 @@ public class PantallaMenu implements Screen{
 	private Skin skin;
 	private Repository repository;
 	
+	private Image fondo;
+	
 	public PantallaMenu(Main game) {
 		this.game = game;
 		this.stage = new Stage(new ScreenViewport());
@@ -34,8 +39,17 @@ public class PantallaMenu implements Screen{
 	
 	@Override
 	public void show() {
+		//Gdx.input.setCursorCatched(false);
+		//Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
+		
 		Gdx.input.setInputProcessor(stage);
 		
+		game.controlarMusicaMenu("musica_menus.mp3", true);
+
+	    fondo = new Image(new Texture(Gdx.files.internal("fondos/fondo_menu.png")));
+	    fondo.setFillParent(true);
+	    stage.addActor(fondo);
+	    
 		Table table = new Table();
 		table.setFillParent(true);
 		stage.addActor(table);
@@ -66,6 +80,7 @@ public class PantallaMenu implements Screen{
 		btnNuevaPartida.addListener(new ChangeListener() {
 			@Override
 			public void changed(ChangeEvent event, Actor actor) {
+				game.controlarMusicaMenu(null, false);
 				repository.actualizarProgreso(game.idUsuarioLogueado,1);
 				repository.borrarHistorialUsuario(game.idUsuarioLogueado);
 				game.setScreen(new PantallaJuego (game, 1, true));
@@ -76,6 +91,7 @@ public class PantallaMenu implements Screen{
 			@Override
 			public void changed(ChangeEvent event, Actor actor) {
 				if(!btnContinuarPartida.isDisabled()) {
+					game.controlarMusicaMenu(null, false);
 					game.setScreen(new PantallaJuego(game, ultimoId, true));
 				}
 			}
@@ -102,8 +118,7 @@ public class PantallaMenu implements Screen{
 	
 	@Override
 	public void render(float delta) {
-		ScreenUtils.clear(0.1f, 0.1f, 0.3f, 1);
-		
+		ScreenUtils.clear(0,0,0,1);
 		stage.act(delta);
 		stage.draw();
 	}

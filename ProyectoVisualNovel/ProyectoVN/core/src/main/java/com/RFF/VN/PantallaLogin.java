@@ -4,9 +4,12 @@ package com.RFF.VN;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Cursor;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Actor;
 import com.badlogic.gdx.scenes.scene2d.Stage;
+import com.badlogic.gdx.scenes.scene2d.ui.Image;
 import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
@@ -22,6 +25,8 @@ public class PantallaLogin implements Screen{
 	private Skin skin;
 	private Repository repository;
 	
+	private Image fondo;
+	
 	public PantallaLogin(Main game) {
 		this.game = game;
 		this.repository = new Repository();
@@ -36,8 +41,17 @@ public class PantallaLogin implements Screen{
 	
 	@Override
 	public void show() {
+		//Gdx.input.setCursorCatched(false);
+		//Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
+		
 		Gdx.input.setInputProcessor(stage); // Stage recibe los clics del ratón
 		
+		game.controlarMusicaMenu("musica_menus.mp3", true);
+	    
+	    fondo = new Image(new Texture(Gdx.files.internal("fondos/fondo_login.png")));
+	    fondo.setFillParent(true);
+	    stage.addActor(fondo);
+	    
 		Table table = new Table(); // Crear tabla para organizar los elementos en pantalla
 		table.setFillParent(true); // Ocupa toda la pantalla
 		stage.addActor(table);
@@ -135,8 +149,7 @@ public class PantallaLogin implements Screen{
 	
 	@Override
 	public void render(float delta) {
-		ScreenUtils.clear(0.1f, 0.1f, 0.3f, 1);
-		
+		ScreenUtils.clear(0,0,0,1);
         stage.act(delta);
         stage.draw();
 	}

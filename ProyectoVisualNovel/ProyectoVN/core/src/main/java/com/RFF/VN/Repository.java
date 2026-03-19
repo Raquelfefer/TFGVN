@@ -187,15 +187,10 @@ public class Repository {
 			
 			stmt.setInt(1, idUsuario);
 			stmt.setInt(2, idLogro);
-			
-			int filasAfectadas = stmt.executeUpdate();
-			if(filasAfectadas > 0) {
-				System.out.println("Logro guardado con exito");
-			}
+			stmt.executeUpdate();
 		}catch (SQLException e) {
 			e.printStackTrace();
 		}
-	
 	}
 	
 	public List<LogroDetalleDTO> obtenerListaLogros(int idUsuario){

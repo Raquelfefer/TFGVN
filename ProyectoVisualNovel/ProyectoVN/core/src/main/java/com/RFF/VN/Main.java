@@ -2,6 +2,7 @@ package com.RFF.VN;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
@@ -18,6 +19,9 @@ public class Main extends Game {
     
     public int idUsuarioLogueado;
     public String nombreUsuarioLogueado;
+    
+    public Music musicaMenu;
+    private String nombreMusicaMenu = "";
     
     @Override
     public void create() {
@@ -48,6 +52,25 @@ public class Main extends Game {
         
         fuente = generator.generateFont(parameter); 
         generator.dispose(); 
+    }
+    
+    public void controlarMusicaMenu(String nombreArchivo, boolean reproducir) {
+    	if(!reproducir) {
+    		if(musicaMenu != null) {
+    			musicaMenu.stop();
+    			nombreMusicaMenu = "";
+    		}
+    		return;
+    	}
+    	
+    	if (nombreMusicaMenu.equals(nombreArchivo)) return;
+    	
+    	if (musicaMenu != null) musicaMenu.dispose();
+    	
+    	musicaMenu = Gdx.audio.newMusic(Gdx.files.internal("musica/"+ nombreArchivo));
+    	musicaMenu.setLooping(true);
+    	musicaMenu.play();
+    	nombreMusicaMenu = nombreArchivo;
     }
 
     @Override

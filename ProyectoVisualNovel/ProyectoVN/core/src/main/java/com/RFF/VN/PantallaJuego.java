@@ -9,6 +9,7 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
@@ -74,6 +75,9 @@ public class PantallaJuego implements Screen{
 	
 	@Override
 	public void show() {
+		//Gdx.input.setCursorCatched(false);
+		//Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
+		
 		Gdx.input.setInputProcessor(stage);
 		
 		//Fondo
@@ -90,7 +94,7 @@ public class PantallaJuego implements Screen{
 		imgDer = new Image();
 		
 		tablaPersonajes.add(imgIzq).expand().bottom().left().padLeft(50).padBottom(150);
-		tablaPersonajes.add(imgDer).expand().bottom().right().padLeft(50).padBottom(150);
+		tablaPersonajes.add(imgDer).expand().bottom().right().padRight(50).padBottom(150);
 		
 		//Botón superior derecha
 		
@@ -126,6 +130,7 @@ public class PantallaJuego implements Screen{
 		contenedorPrincipal.background(skin.getDrawable("textfield"));
 		contenedorPrincipal.pad(20);
 		contenedorPrincipal.fillX(); 
+		contenedorPrincipal.getColor().a = 0.8f;
 
 		tablePrincipal.add(contenedorPrincipal).width(900).bottom();
 		
@@ -166,6 +171,7 @@ public class PantallaJuego implements Screen{
 			Table tablaContenido = new Table();
 			tablaContenido.add(etiquetaTexto).width(860).left();
 			contenedorPrincipal.setActor(tablaContenido);
+			contenedorPrincipal.getColor().a = 0.8f;
 			
 			etiquetaTexto.setText(datos.descripcion);
 			idSiguienteNarracion = datos.idSiguiente;
@@ -278,7 +284,6 @@ public class PantallaJuego implements Screen{
 	
 	private void gestionarMusica(String musica) {
 	    if (musica == null || musica.isEmpty()) return;
-
 	    
 	    if (musica.equals(nombreMusicaActual)) {
 	        return; 
