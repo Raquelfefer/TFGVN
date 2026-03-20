@@ -4,7 +4,6 @@ package com.RFF.VN;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.graphics.Color;
-import com.badlogic.gdx.graphics.Cursor;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -41,8 +40,6 @@ public class PantallaLogin implements Screen{
 	
 	@Override
 	public void show() {
-		//Gdx.input.setCursorCatched(false);
-		//Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
 		
 		Gdx.input.setInputProcessor(stage); // Stage recibe los clics del ratón
 		
