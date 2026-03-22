@@ -47,7 +47,7 @@ public class Main extends Game {
         parameter.color = Color.WHITE;
         parameter.borderWidth = 3; 
         parameter.borderColor = Color.BLACK;
-        parameter.characters = FreeTypeFontGenerator.DEFAULT_CHARS + "áéíóúÁÉÍÓÚñÑ¿¡";
+        parameter.characters = FreeTypeFontGenerator.DEFAULT_CHARS + "áéíóúÁÉÍÓÚñÑ¿?¡!-—";
         
         fuente = generator.generateFont(parameter); 
     

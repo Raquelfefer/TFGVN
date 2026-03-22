@@ -138,7 +138,7 @@ public class PantallaJuego implements Screen{
 	
 	private void cargarEscena(int id) {
 		//Falta poner la ultima narracion que da pie a los diferentes finales
-		if(id == 5) {
+		if(id == 6) {
 			comprobarFinal();
 			return;
 		}
@@ -258,9 +258,9 @@ public class PantallaJuego implements Screen{
 		boolean finalBueno = repository.haElegidoOpcion(game.idUsuarioLogueado, 1);
 		
 		if(finalBueno) {
-			cargarEscena(6);
-		}else {
 			cargarEscena(7);
+		}else {
+			cargarEscena(8);
 		}
 	}
 	
