@@ -17,24 +17,30 @@ public class Repository {
 	//  - Id Usuario si tiene exito
 	//  - -1 Si el nombre ya existe
 	//  - -2 Error general
-	public int registrarUsuario(String nombre, String password) {
-		String passwordHasheada = Seguridad.hashear(password);
-		String sql = "INSERT INTO USUARIO (Nombre_usuario, Password_usuario) VALUES (?, ?)";
-		
-		try (Connection con = ConexionBD.obtenerConexion();
-			PreparedStatement stmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
-			stmt.setString(1, nombre);
-			stmt.setString(2, passwordHasheada);
-			stmt.executeUpdate();
-			
-			ResultSet rs = stmt.getGeneratedKeys();
-			if(rs.next()) return rs.getInt(1);
-			
-		}catch (SQLException e) {
-			if(e.getErrorCode() == 1062) return -1; // Duplicado
-			e.printStackTrace();
-		}
-		return -2; //Error general	
+	public int registrarUsuario(String nombre, String password, String pregunta, String respuesta) {
+	    String passwordHasheada = Seguridad.hashear(password);
+	    String respuestaHasheada = Seguridad.hashear(respuesta); 
+	    
+	    String sql = "INSERT INTO USUARIO (Nombre_usuario, Password_usuario, Pregunta_seguridad, Respuesta_seguridad) VALUES (?, ?, ?, ?)";
+	    
+	    try (Connection con = ConexionBD.obtenerConexion();
+	        PreparedStatement stmt = con.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+	        
+	        stmt.setString(1, nombre);
+	        stmt.setString(2, passwordHasheada);
+	        stmt.setString(3, pregunta);
+	        stmt.setString(4, respuestaHasheada);
+	        
+	        stmt.executeUpdate();
+	        
+	        ResultSet rs = stmt.getGeneratedKeys();
+	        if (rs.next()) return rs.getInt(1); // Éxito: devuelve ID
+	        
+	    } catch (SQLException e) {
+	        if (e.getErrorCode() == 1062) return -1; // Error: Usuario duplicado
+	        e.printStackTrace();
+	    }
+	    return -2; // Error general
 	}
 	
 	//Intenta registrar un usuario: 
@@ -64,6 +70,55 @@ public class Repository {
 		}
 		return 0; //Usuario no existe o error de conexion
 	}
+	
+	//Obtener pregunta de usuario al intentar recuperar contraseña
+	public String obtenerPreguntaUsuario(String nombreUsuario) {
+        String sql = "SELECT Pregunta_seguridad FROM USUARIO WHERE Nombre_usuario = ?";
+        
+        try (Connection con = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+            
+            stmt.setString(1, nombreUsuario);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                return rs.getString("Pregunta_seguridad");
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return null; // Si no existe el usuario
+    }
+	
+	//Verificar respuesta y actualizar contraseña
+	public boolean actualizarPassword(String nombre, String respuestaEntrada, String nuevaPass) {
+        String sql = "SELECT Respuesta_seguridad FROM USUARIO WHERE Nombre_usuario = ?";
+        
+        try (Connection con = ConexionBD.obtenerConexion();
+             PreparedStatement stmt = con.prepareStatement(sql)) {
+            
+            stmt.setString(1, nombre);
+            ResultSet rs = stmt.executeQuery();
+            
+            if (rs.next()) {
+                String respuestaBD = rs.getString("Respuesta_seguridad");
+                
+                if (Seguridad.verificar(respuestaEntrada, respuestaBD)) {
+                   
+                    String sqlUpdate = "UPDATE USUARIO SET Password_usuario = ? WHERE Nombre_usuario = ?";
+                    try (PreparedStatement stmtUp = con.prepareStatement(sqlUpdate)) {
+                        stmtUp.setString(1, Seguridad.hashear(nuevaPass));
+                        stmtUp.setString(2, nombre);
+                        return stmtUp.executeUpdate() > 0;
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
 	
 	//PANTALLA MENU
 	
@@ -179,18 +234,36 @@ public class Repository {
 		return lista;
 	}
 	
-	public void registrarLogro(int idUsuario, int idLogro) {
-		String sql = "INSERT IGNORE INTO LOGRO_CONSEGUIDO (Id_usuario, Id_logro, Fecha) VALUES (?, ?, CURRENT_TIMESTAMP)";
+	public boolean registrarLogro(int idUsuario, int idLogro) {
+	    String sql = "INSERT IGNORE INTO LOGRO_CONSEGUIDO (Id_usuario, Id_logro, Fecha) VALUES (?, ?, CURRENT_TIMESTAMP)";
+	    
+	    try (Connection con = ConexionBD.obtenerConexion();
+	         PreparedStatement stmt = con.prepareStatement(sql)) {
+	        
+	        stmt.setInt(1, idUsuario);
+	        stmt.setInt(2, idLogro);
+	        
+	        int filasAfectadas = stmt.executeUpdate();
+	        
+	        return filasAfectadas > 0; 
+	        
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	        return false;
+	    }
+	}
 	
-		try(Connection con = ConexionBD.obtenerConexion();
-			PreparedStatement stmt = con.prepareStatement(sql)){
-			
-			stmt.setInt(1, idUsuario);
-			stmt.setInt(2, idLogro);
-			stmt.executeUpdate();
-		}catch (SQLException e) {
-			e.printStackTrace();
-		}
+	public String obtenerNombreLogro(int idLogro) {
+	    String sql = "SELECT Nombre FROM LOGRO WHERE Id_logro = ?";
+	    try (Connection con = ConexionBD.obtenerConexion();
+	         PreparedStatement stmt = con.prepareStatement(sql)) {
+	        stmt.setInt(1, idLogro);
+	        ResultSet rs = stmt.executeQuery();
+	        if (rs.next()) return rs.getString("Nombre");
+	    } catch (SQLException e) {
+	        e.printStackTrace();
+	    }
+	    return "Logro Desbloqueado";
 	}
 	
 	public List<LogroDetalleDTO> obtenerListaLogros(int idUsuario){

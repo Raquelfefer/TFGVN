@@ -4,14 +4,14 @@ import org.mindrot.jbcrypt.BCrypt;
 
 public class Seguridad {
 	// Convierte la contraseña a formato Hash
-	public static String hashear(String passwordPlano) {
-		return BCrypt.hashpw(passwordPlano, BCrypt.gensalt());
+	public static String hashear(String texto) {
+		return BCrypt.hashpw(texto, BCrypt.gensalt());
 	}
 	
 	// Compara el texto introducido con el hash de base de datos
-	public static boolean verificar(String passwordPlano, String hashed) {
+	public static boolean verificar(String texto, String hashed) {
 		try {
-			return BCrypt.checkpw(passwordPlano, hashed);
+			return BCrypt.checkpw(texto, hashed);
 		} catch (Exception e) {
 			return false;
 		}

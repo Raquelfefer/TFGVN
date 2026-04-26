@@ -8,14 +8,21 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.scenes.scene2d.ui.Label;
+import com.badlogic.gdx.scenes.scene2d.ui.Skin;
+import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
+import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.utils.viewport.ExtendViewport;
-
 
 public class Main extends Game {
     private SpriteBatch batch;
-    private BitmapFont fuente;
     private ExtendViewport viewport;
     private OrthographicCamera camera;
+
+    // Recursos globales
+    public Skin skin;
+    private BitmapFont fuenteCozy;  
+    private BitmapFont fuenteTitulo; 
     
     public int idUsuarioLogueado;
     public String nombreUsuarioLogueado;
@@ -28,55 +35,92 @@ public class Main extends Game {
         batch = new SpriteBatch();
         camera = new OrthographicCamera();
         viewport = new ExtendViewport(1280, 720, camera);
-       
-        //Cargar fuente para todo el juego
-        generarFuente();
-        
-        //Conexión global a MaraiDB
+
+        generarFuentes();
+
+        // --- CARGAR EL ATLAS (Para que encuentre los dibujos de los botones) ---
+        com.badlogic.gdx.graphics.g2d.TextureAtlas atlas = new com.badlogic.gdx.graphics.g2d.TextureAtlas(Gdx.files.internal("uiskin.atlas"));
+        skin = new Skin(atlas); 
+
+        // Crear el recurso blanco para el fondo de diálogos
+        com.badlogic.gdx.graphics.Pixmap pixmap = new com.badlogic.gdx.graphics.Pixmap(1, 1, com.badlogic.gdx.graphics.Pixmap.Format.RGBA8888);
+        pixmap.setColor(com.badlogic.gdx.graphics.Color.WHITE);
+        pixmap.fill();
+        skin.add("white", new com.badlogic.gdx.graphics.Texture(pixmap)); 
+        pixmap.dispose();
+
+        // Añadir fuentes
+        skin.add("default-font", fuenteCozy, BitmapFont.class);
+        skin.add("fuente-titulo", fuenteTitulo, BitmapFont.class);
+
+        // Cargar el JSON
+        skin.load(Gdx.files.internal("uiskin.json"));
+
+        // Aplicar estilos
+        skin.get(Label.LabelStyle.class).font = fuenteCozy;
+        skin.get(TextButton.TextButtonStyle.class).font = fuenteCozy;
+        skin.get(TextField.TextFieldStyle.class).font = fuenteCozy;
+
         ConexionBD.obtenerConexion();
-        
-        //Empezar por la pantalla de Login
         this.setScreen(new PantallaLogin(this));
     }
     
-    private void generarFuente() {
-    	FreeTypeFontGenerator generator = new FreeTypeFontGenerator(Gdx.files.internal("fuente.ttf"));
-        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+    private void generarFuentes() {
+        // --- FUENTE PARA TEXTOS (Coming Soon) ---
+        FreeTypeFontGenerator genCozy = new FreeTypeFontGenerator(Gdx.files.internal("ComingSoon-Regular.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter paramCozy = new FreeTypeFontGenerator.FreeTypeFontParameter();
 
-        parameter.size = 18; 
-        parameter.color = Color.WHITE;
-        parameter.borderWidth = 3; 
-        parameter.borderColor = Color.BLACK;
-        parameter.characters = FreeTypeFontGenerator.DEFAULT_CHARS + "áéíóúÁÉÍÓÚñÑ¿?¡!-—";
+        paramCozy.size = 28; 
+        paramCozy.color = Color.valueOf("FDF9E5"); // Crema
+        paramCozy.borderWidth = 2.5f; 
+        paramCozy.borderColor = Color.valueOf("422E26"); // Marrón oscuro
+        paramCozy.shadowOffsetX = 2;
+        paramCozy.shadowOffsetY = 2;
+        paramCozy.shadowColor = new Color(0, 0, 0, 0.4f);
+        paramCozy.characters = FreeTypeFontGenerator.DEFAULT_CHARS + "áéíóúÁÉÍÓÚñÑ¿?¡!-—";
         
-        fuente = generator.generateFont(parameter); 
-    
-        generator.dispose(); 
+        fuenteCozy = genCozy.generateFont(paramCozy);
+        genCozy.dispose();
+
+        // --- FUENTE PARA TÍTULOS (Zen Loop) ---
+        FreeTypeFontGenerator genZen = new FreeTypeFontGenerator(Gdx.files.internal("ZenLoop-Regular.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter paramZen = new FreeTypeFontGenerator.FreeTypeFontParameter();
+
+        paramZen.size = 65; // Aumentamos un poco el tamaño
+        paramZen.color = Color.valueOf("FFD700"); // Un dorado más vibrante
+
+        // TRUCO PARA HACERLA GORDITA:
+        paramZen.borderWidth = 4.5f; // Aumentamos el grosor del borde significativamente
+        paramZen.borderColor = Color.valueOf("422E26"); // Marrón muy oscuro para que resalte el dorado
+        paramZen.borderStraight = false; // Bordes redondeados para que sea más "cozy"
+
+        // Opcional: añadir una sombra para darle profundidad
+        paramZen.shadowOffsetX = 3;
+        paramZen.shadowOffsetY = 3;
+        paramZen.shadowColor = new Color(0, 0, 0, 0.5f);
+
+        paramZen.characters = FreeTypeFontGenerator.DEFAULT_CHARS + "áéíóúÁÉÍÓÚñÑ¿?¡!-—";
+
+        fuenteTitulo = genZen.generateFont(paramZen);
+        genZen.dispose();
     }
     
     public void controlarMusicaMenu(String nombreArchivo, boolean reproducir) {
-    	if(!reproducir) {
-    		if(musicaMenu != null) {
-    			musicaMenu.stop();
-    			nombreMusicaMenu = "";
-    		}
-    		return;
-    	}
-    	
-    	if (nombreMusicaMenu.equals(nombreArchivo)) return;
-    	
-    	if (musicaMenu != null) musicaMenu.dispose();
-    	
-    	musicaMenu = Gdx.audio.newMusic(Gdx.files.internal("musica/"+ nombreArchivo));
-    	musicaMenu.setLooping(true);
-    	musicaMenu.play();
-    	nombreMusicaMenu = nombreArchivo;
-    }
-
-    @Override
-    public void render() {
-    	//Llama al render de la pantalla activa
-        super.render();
+        if(!reproducir) {
+            if(musicaMenu != null) {
+                musicaMenu.stop();
+                nombreMusicaMenu = "";
+            }
+            return;
+        }
+        if (nombreMusicaMenu.equals(nombreArchivo)) return;
+        if (musicaMenu != null) musicaMenu.dispose();
+        
+        musicaMenu = Gdx.audio.newMusic(Gdx.files.internal("musica/"+ nombreArchivo));
+        musicaMenu.setLooping(true);
+        musicaMenu.setVolume(0.4f); // Un poco más bajita para que sea "cozy"
+        musicaMenu.play();
+        nombreMusicaMenu = nombreArchivo;
     }
 
     @Override
@@ -87,13 +131,16 @@ public class Main extends Game {
     @Override
     public void dispose() {
         batch.dispose();
-        fuente.dispose();
+        if (fuenteCozy != null) fuenteCozy.dispose();
+        if (fuenteTitulo != null) fuenteTitulo.dispose();
+        if (skin != null) skin.dispose();
+        if (musicaMenu != null) musicaMenu.dispose();
     }
     
-    public SpriteBatch getBatch() { return batch;}
-    public BitmapFont getFuente() { return fuente;}
-    public ExtendViewport getViewport() { return viewport;}
-    public OrthographicCamera getCamera() { return camera;}
-    
-   
+    // Getters
+    public SpriteBatch getBatch() { return batch; }
+    public BitmapFont getFuente() { return fuenteCozy; } // Por defecto devolvemos la cozy
+    public BitmapFont getFuenteTitulo() { return fuenteTitulo; }
+    public ExtendViewport getViewport() { return viewport; }
+    public OrthographicCamera getCamera() { return camera; }
 }

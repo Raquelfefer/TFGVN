@@ -1,8 +1,6 @@
 package com.RFF.VN;
 
-
 import java.util.List;
-
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.Screen;
@@ -10,7 +8,6 @@ import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.audio.Sound;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.scenes.scene2d.Actor;
@@ -24,337 +21,358 @@ import com.badlogic.gdx.scenes.scene2d.ui.Label;
 import com.badlogic.gdx.scenes.scene2d.ui.Skin;
 import com.badlogic.gdx.scenes.scene2d.ui.Table;
 import com.badlogic.gdx.scenes.scene2d.ui.TextButton;
-import com.badlogic.gdx.scenes.scene2d.ui.TextField;
 import com.badlogic.gdx.scenes.scene2d.utils.ClickListener;
 import com.badlogic.gdx.scenes.scene2d.utils.TextureRegionDrawable;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.ScreenViewport;
 
-public class PantallaJuego implements Screen{
-	private final Main game;
-	private Stage stage;
-	private Skin skin;
-	private Label etiquetaTexto;
-	private Repository repository;
-	private Container<Table> contenedorPrincipal;
-	
-	private int idNarracionActual;
-	private Integer idSiguienteNarracion; //Usamos Integer para que pueda ser nulo
-	private int capituloActual = -1;
-	private boolean mostrandoOpciones = false;
-	
-	private Image imgFondo;
-	private Image imgIzq, imgDer;
-	private Music musicaActual;
-	private String nombreMusicaActual = "";
-	
-	public PantallaJuego(Main game, int idRecibido, boolean esCapitulo) {
-		this.game = game;
-		this.repository = new Repository();
-		this.stage = new Stage(new ScreenViewport());
-		this.skin = new Skin(Gdx.files.internal("uiskin.json"));
-		
-		this.skin.add("default-font", game.getFuente(), BitmapFont.class);
-		this.skin.get(Label.LabelStyle.class).font = game.getFuente();
-		this.skin.get(TextField.TextFieldStyle.class).font = game.getFuente();
-		this.skin.get(TextButton.TextButtonStyle.class).font = game.getFuente();
-		
-		if(esCapitulo) {
-			int idInicial = repository.obtenerIdInicialPorCapitulo(idRecibido);
-			
-			if(idInicial != -1) {
-				this.idNarracionActual = idInicial;
-			}else {
-				this.idNarracionActual = 1;
-			}
-		}else {
-			this.idNarracionActual = idRecibido;
-		}
-	}
-	
-	@Override
-	public void show() {
-		//Gdx.input.setCursorCatched(false);
-		//Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
-		
-		Gdx.input.setInputProcessor(stage);
-		
-		//Fondo
-		imgFondo = new Image();
-		imgFondo.setFillParent(true);
-		stage.addActor(imgFondo);
-		
-		//Personajes
-		Table tablaPersonajes = new Table();
-		tablaPersonajes.setFillParent(true);
-		stage.addActor(tablaPersonajes);
-		
-		imgIzq = new Image();
-		imgDer = new Image();
-		
-		tablaPersonajes.add(imgIzq).expand().bottom().left().padLeft(50).padBottom(150);
-		tablaPersonajes.add(imgDer).expand().bottom().right().padRight(50).padBottom(150);
-		
-		//Botón superior derecha
-		
-		Table tablaSuperior = new Table();
-	    tablaSuperior.top().right().setFillParent(true);
-	    stage.addActor(tablaSuperior);
-		
-		TextButton btnPausa = new TextButton("MENU", skin);
-	    btnPausa.addListener(new ClickListener() {
-	        @Override
-	        public void clicked(InputEvent event, float x, float y) {
-	            mostrarDialogoSalida();
-	        }
-	    });
-	    
-	    tablaSuperior.add(btnPausa).pad(10);
-	    
-	    //Texto principal
-	    Table tablePrincipal = new Table();
-	    tablePrincipal.bottom().padBottom(50).setFillParent(true);
-		stage.addActor(tablePrincipal);
-	
-		//Caja de texto para la narración
-		etiquetaTexto = new Label("Cargando historia...", skin);
-		etiquetaTexto.setWrap(true); //Ajuste de línea automatico
-		
-		//Tabla interna para el texto u opciones
-		Table tablaContenido = new Table();
-		tablaContenido.add(etiquetaTexto).width(860).left();
-		
-		//Fondo
-		contenedorPrincipal = new Container<>(tablaContenido);
-		contenedorPrincipal.background(skin.getDrawable("textfield"));
-		contenedorPrincipal.pad(20);
-		contenedorPrincipal.fillX(); 
-		contenedorPrincipal.getColor().a = 0.8f;
+public class PantallaJuego implements Screen {
+    private final Main game;
+    private Stage stage;
+    private Skin skin;
+    private Label etiquetaTexto;
+    private Repository repository;
+    private Container<Table> contenedorPrincipal;
 
-		tablePrincipal.add(contenedorPrincipal).width(900).bottom();
-		
-		cargarEscena(idNarracionActual);
-	}
-	
-	private void cargarEscena(int id) {
-		//Falta poner la ultima narracion que da pie a los diferentes finales
-		if(id == 6) {
-			comprobarFinal();
-			return;
-		}
-		
-		NarracionDTO datos = repository.obtenerNarracion(id);
-		
-		if(datos != null) {
-			//Fondo
-			if(datos.fondo != null) {
-				Texture textFondo = new Texture(Gdx.files.internal("fondos/" + datos.fondo));
-				imgFondo.setDrawable(new TextureRegionDrawable(new TextureRegion(textFondo)));
-			}
-			
-			//Personajes y animacion
-			actualizarPersonaje(datos.personajeIzq, true);
-			actualizarPersonaje(datos.personajeDer, false);
-			
-			//Musica
-			gestionarMusica(datos.musica);
-			
-			//Efecto de sonido
-			if (datos.sonidoEfecto != null) {
-				Sound efecto = Gdx.audio.newSound(Gdx.files.internal("sonidos/" + datos.sonidoEfecto));
-				efecto.play();
-			}
-			
-			mostrandoOpciones = false;
-			
-			Table tablaContenido = new Table();
-			tablaContenido.add(etiquetaTexto).width(860).left();
-			contenedorPrincipal.setActor(tablaContenido);
-			contenedorPrincipal.getColor().a = 0.8f;
-			
-			etiquetaTexto.setText(datos.descripcion);
-			idSiguienteNarracion = datos.idSiguiente;
-			
-			if(datos.idCapitulo != capituloActual) {
-				capituloActual = datos.idCapitulo;
-				repository.actualizarProgreso(game.idUsuarioLogueado, capituloActual);
-			}
-		}
-	}
-	
-	private void mostrarOpciones() {
-		List<OpcionDTO> opciones = repository.obtenerOpciones(idNarracionActual);
-		if (opciones.isEmpty()) return;
-		
-		mostrandoOpciones = true;
-		Table tablaOpciones = new Table();
-		
-		for(int i = 0; i < opciones.size(); i++) {
-			final OpcionDTO opcion = opciones.get(i);
-			final Label labelOpcion = new Label((i + 1) + ". " + opcion.texto, skin);
-			
-			
-			//Listeners para el raton
-			labelOpcion.addListener(new ClickListener(){
-				@Override
-				public void clicked(InputEvent event, float x, float y) {
-					seleccionarOpcion(opcion);
-				}
-				@Override
-				public void enter(InputEvent event, float x, float y, int pointer, Actor fromActor) {
-					labelOpcion.setColor(Color.YELLOW);
-				}
-				@Override
-				public void exit(InputEvent event, float x, float y, int pointer, Actor toActor) {
-					labelOpcion.setColor(Color.WHITE);
-				}
-			});
-			
-			tablaOpciones.add(labelOpcion).width(860).left().padBottom(10).row();
-		}
-		
-		contenedorPrincipal.setActor(tablaOpciones);
-	}
-	
-	private void seleccionarOpcion(OpcionDTO seleccion) {
-		repository.guardarDecision(game.idUsuarioLogueado, seleccion.idOpcion);
-		if(seleccion.idLogro != null) {
-			repository.registrarLogro(game.idUsuarioLogueado, seleccion.idLogro);
-		}
-		
-		idNarracionActual = seleccion.idDestino;
-		cargarEscena(idNarracionActual);
-	}
-	
-	private void mostrarDialogoSalida() {
-	    Dialog dialogo = new Dialog("PAUSA", skin) {
-	        @Override
-	        protected void result(Object object) {
-	            int opcion = (Integer) object;
-	            switch (opcion) {
-	                case 1: 
-	                    game.setScreen(new PantallaMenu(game));
-	                    break;
-	                case 2: 
-	                    game.setScreen(new PantallaLogin(game));
-	                    break;
-	                case 3: 
-	                    Gdx.app.exit();
-	                    break;
-	            }
-	        }
-	    };
+    private int idNarracionActual;
+    private Integer idSiguienteNarracion;
+    private int capituloActual = -1;
+    private boolean mostrandoOpciones = false;
 
-	    dialogo.text("¿Qué deseas hacer?");
-	    dialogo.button("Volver al Menú", 1);
-	    dialogo.button("Cerrar Sesión", 2);
-	    dialogo.button("Salir del Juego", 3);
-	    dialogo.button("Cancelar", 4); 
-	    
-	    dialogo.show(stage);
-	}
-	
-	private void comprobarFinal() {
-		boolean finalBueno = repository.haElegidoOpcion(game.idUsuarioLogueado, 1);
-		
-		if(finalBueno) {
-			cargarEscena(7);
-		}else {
-			cargarEscena(8);
-		}
-	}
-	
-	private void actualizarPersonaje(String ruta, boolean esIzquierda) {
-		Image img = esIzquierda ? imgIzq : imgDer;
-		img.setDrawable(null);
-		img.clearActions();
-		
-		if(ruta != null) {
-			Texture tex = new Texture(Gdx.files.internal("personajes/"+ ruta));
-			img.setDrawable(new TextureRegionDrawable(new TextureRegion(tex)));
-			
-			//Efecto de movimiento
-			img.addAction(Actions.forever(Actions.sequence(
-				Actions.moveBy(0,  15, 1.2f, Interpolation.sine),
-				Actions.moveBy(0,-15,1.2f, Interpolation.sine)
-			)));
-		}
-	}
-	
-	private void gestionarMusica(String musica) {
-	    if (musica == null || musica.isEmpty()) return;
-	    
-	    if (musica.equals(nombreMusicaActual)) {
-	        return; 
-	    }
+    private Image imgFondo;
+    private Image imgIzq, imgDer;
+    private Image imgFlecha;
+    private Music musicaActual;
+    private String nombreMusicaActual = "";
+    private Sound sonidoLogro; 
 
-	    if (musicaActual != null) {
-	        musicaActual.stop();
-	        musicaActual.dispose(); 
-	    }
+    private float anchoCaja;
+    private float altoCaja;
+    private float margenAbajo = 20f;
+    
+    private String textoCompleto = "";    // Almacena el diálogo entero de la DB
+    private float tiempoAcumulado = 0f;
+    private float velocidadEscritura = 0.03f; // Segundos entre letras (ajusta a tu gusto)
+    private int indiceActual = 0;
+    private boolean escribiendo = false;
 
-        musicaActual = Gdx.audio.newMusic(Gdx.files.internal("musica/" + musica));
-        musicaActual.setLooping(true);
-        musicaActual.setVolume(0.5f); 
-        musicaActual.play();
-      
-        nombreMusicaActual = musica;
-	}
-	
-	@Override
-	public void render(float delta) {
-		ScreenUtils.clear(0.1f, 0.1f, 0.3f, 1);
-		
-		boolean hayDialogo = false;
-	    for (Actor actor : stage.getActors()) {
-	        if (actor instanceof Dialog) hayDialogo = true;
-	    }
-	    
-	    if(!hayDialogo) {
-	    	if(mostrandoOpciones) {
-				if(Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) manejarTeclado(0);
-				if(Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) manejarTeclado(1);
-				if(Gdx.input.isKeyJustPressed(Input.Keys.NUM_3)) manejarTeclado(2);
-			}else if(Gdx.input.justTouched() || Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
-				if(idSiguienteNarracion != null) {
-					idNarracionActual = idSiguienteNarracion;
-					cargarEscena(idNarracionActual);
-				}else {
-					mostrarOpciones();
-				}
-			}
-	    }
-		
-		stage.act(delta);
-		stage.draw();
-	}
-	
-	private void manejarTeclado(int indice) {
-		List<OpcionDTO> lista = repository.obtenerOpciones(idNarracionActual);
-		if(indice < lista.size()) {
-			seleccionarOpcion(lista.get(indice));
-		}
-	}
-	
-	@Override
-	public void resize(int width, int height) {
-		game.getViewport().update(width, height, true);
-	}
-	
-	@Override public void pause() {}
-	@Override public void resume() {}
-	@Override public void hide() {
-		if (musicaActual != null) {
-	        musicaActual.stop();
-	        musicaActual.dispose();
-	    }
-	}
-	@Override public void dispose() {
-    	stage.dispose();
-    	if (musicaActual != null) {
-    		musicaActual.dispose();
-    	}
-    	skin.dispose();
+    public PantallaJuego(Main game, int idRecibido, boolean esCapitulo) {
+        this.game = game;
+        this.repository = new Repository();
+        this.stage = new Stage(new ScreenViewport());
+        this.skin = game.skin;
+
+        if (esCapitulo) {
+            int idInicial = repository.obtenerIdInicialPorCapitulo(idRecibido);
+            this.idNarracionActual = (idInicial != -1) ? idInicial : 1;
+        } else {
+            this.idNarracionActual = idRecibido;
+        }
     }
 
+    @Override
+    public void show() {
+        Gdx.input.setInputProcessor(stage);
+        
+        // CARGA DEL SONIDO (IMPORTANTE)
+        sonidoLogro = Gdx.audio.newSound(Gdx.files.internal("sonidos/logro.mp3"));
+
+        // 1. CAPA FONDO
+        imgFondo = new Image();
+        imgFondo.setFillParent(true);
+        stage.addActor(imgFondo);
+
+        float sw = Gdx.graphics.getWidth();
+        float sh = Gdx.graphics.getHeight();
+        
+        this.altoCaja = sh * 0.25f; 
+        this.anchoCaja = sw * 0.90f; 
+        float puntoApoyo = altoCaja + margenAbajo + 10f;
+
+        // 2. CAPA PERSONAJES
+        Table tablaPersonajes = new Table();
+        tablaPersonajes.setFillParent(true);
+        stage.addActor(tablaPersonajes);
+
+        imgIzq = new Image();
+        imgDer = new Image();
+        imgIzq.setScaling(com.badlogic.gdx.utils.Scaling.fit);
+        imgIzq.setAlign(Align.bottom);
+        imgDer.setScaling(com.badlogic.gdx.utils.Scaling.fit);
+        imgDer.setAlign(Align.bottom);
+
+        float hPersonaje = sh * 0.75f; 
+        float wPersonaje = sw * 0.45f;
+
+        tablaPersonajes.add(imgIzq).size(wPersonaje, hPersonaje).bottom().left().padLeft(60).padBottom(puntoApoyo);
+        tablaPersonajes.add(imgDer).size(wPersonaje, hPersonaje).bottom().right().padRight(60).padBottom(puntoApoyo);
+
+        // 3. CAPA RECUADRO DE TEXTO
+        Table tablePrincipal = new Table();
+        tablePrincipal.setFillParent(true);
+        tablePrincipal.bottom();
+        stage.addActor(tablePrincipal);
+
+        etiquetaTexto = new Label("", skin);
+        etiquetaTexto.setWrap(true);
+        etiquetaTexto.setAlignment(Align.topLeft);
+
+        contenedorPrincipal = new Container<>(new Table());
+        contenedorPrincipal.background(skin.getDrawable("textfield"));
+        contenedorPrincipal.getColor().a = 0.92f;
+        tablePrincipal.add(contenedorPrincipal).width(anchoCaja).height(altoCaja).padBottom(margenAbajo);
+        
+        // --- INDICADOR DE CONTINUACIÓN (CORREGIDO) ---
+        imgFlecha = new Image(new Texture(Gdx.files.internal("flecha_continuar.png"))); 
+
+        // 1. Forzamos el tamaño aquí y también en la tabla
+        float tamFlecha = 50f; 
+        imgFlecha.setSize(tamFlecha, tamFlecha);
+        imgFlecha.setOrigin(Align.center);
+
+        // 2. Animación (se mantiene igual, es bonita)
+        imgFlecha.addAction(Actions.forever(Actions.sequence(
+            Actions.moveBy(0, 8, 0.6f, Interpolation.sine),
+            Actions.moveBy(0, -8, 0.6f, Interpolation.sine)
+        )));
+
+        // 3. TABLA EXCLUSIVA PARA LA FLECHA
+        Table tablaFlecha = new Table();
+        tablaFlecha.setFillParent(true); // Esto hace que la tabla ocupe TODA la pantalla
+        tablaFlecha.bottom().right();    // Alineamos la tabla a la esquina inferior derecha
+
+        // 4. Añadimos la flecha a la tabla con PADS para que entre en el recuadro
+        // padRight: la empuja hacia la izquierda para que no toque el borde del monitor
+        // padBottom: la sube para que quede dentro de la madera
+        tablaFlecha.add(imgFlecha)
+                   .size(tamFlecha, tamFlecha) 
+                   .padRight((Gdx.graphics.getWidth() - anchoCaja) / 2 + 40) 
+                   .padBottom(margenAbajo + 20);
+
+        stage.addActor(tablaFlecha);
+
+        // 4. CAPA SUPERIOR (EL BOTÓN QUE FALTABA)
+        Table tablaSuperior = new Table();
+        tablaSuperior.setFillParent(true);
+        tablaSuperior.top().right();
+        stage.addActor(tablaSuperior);
+
+        TextButton btnPausa = new TextButton("MENU", skin);
+        btnPausa.addListener(new ClickListener() {
+            @Override
+            public void clicked(InputEvent event, float x, float y) { mostrarDialogoSalida(); }
+        });
+        tablaSuperior.add(btnPausa).pad(20);
+
+        cargarEscena(idNarracionActual);
+    }
+
+    private void cargarEscena(int id) {
+        if (id == 500) { comprobarFinal(); return; }
+        
+        NarracionDTO datos = repository.obtenerNarracion(id);
+        if (datos != null) {
+            // --- CAMBIO 1: La flecha empieza oculta ---
+            imgFlecha.setVisible(false); 
+            
+            if (datos.fondo != null) {
+                imgFondo.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.internal("fondos/" + datos.fondo)))));
+            }
+            actualizarPersonaje(datos.personajeIzq, true);
+            actualizarPersonaje(datos.personajeDer, false);
+            gestionarMusica(datos.musica);
+            
+            if (datos.sonidoEfecto != null) {
+                Gdx.audio.newSound(Gdx.files.internal("sonidos/" + datos.sonidoEfecto)).play();
+            }
+
+            mostrandoOpciones = false;
+            Table tablaContenido = new Table();
+            tablaContenido.add(etiquetaTexto).width(anchoCaja * 0.90f).expandY().top().padTop(35);
+            contenedorPrincipal.setActor(tablaContenido);
+
+            // --- CAMBIO 2: Inicializar máquina de escribir ---
+            this.textoCompleto = datos.descripcion.replace("\\n", "\n"); // Guardamos el texto de la DB
+            this.indiceActual = 0;                  // Empezamos por la primera letra
+            this.tiempoAcumulado = 0f;              // Reiniciamos el cronómetro
+            this.escribiendo = true;                // ¡A escribir!
+            etiquetaTexto.setText("");              // Limpiamos el texto visual por ahora
+
+            idSiguienteNarracion = datos.idSiguiente;
+            
+            if (datos.idCapitulo != capituloActual) {
+                capituloActual = datos.idCapitulo;
+                repository.actualizarProgreso(game.idUsuarioLogueado, capituloActual);
+            }
+        }
+    }
+    
+    private void actualizarMaquinaEscribir(float delta) {
+        if (escribiendo) {
+            tiempoAcumulado += delta;
+            if (tiempoAcumulado >= velocidadEscritura) {
+                tiempoAcumulado = 0;
+                indiceActual++;
+                if (indiceActual <= textoCompleto.length()) {
+                    etiquetaTexto.setText(textoCompleto.substring(0, indiceActual));
+                } else {
+                    escribiendo = false;
+                    imgFlecha.setVisible(true); 
+                }
+            }
+        }
+    }
+
+    private void actualizarPersonaje(String ruta, boolean esIzq) {
+        Image img = esIzq ? imgIzq : imgDer;
+        img.clearActions();
+        if (ruta == null || ruta.isEmpty()) {
+            img.setDrawable(null);
+        } else {
+            img.setDrawable(new TextureRegionDrawable(new TextureRegion(new Texture(Gdx.files.internal("personajes/" + ruta)))));
+        }
+    }
+
+    private void mostrarOpciones() {
+        List<OpcionDTO> opciones = repository.obtenerOpciones(idNarracionActual);
+        if (opciones.isEmpty()) return;
+        mostrandoOpciones = true;
+        imgFlecha.setVisible(false);
+        Table tOpc = new Table();
+        tOpc.top().padTop(25);
+        for (int i = 0; i < opciones.size(); i++) {
+            final OpcionDTO o = opciones.get(i);
+            final Label l = new Label((i + 1) + ". " + o.texto, skin);
+            l.setWrap(true);
+            l.addListener(new ClickListener() {
+                @Override public void clicked(InputEvent e, float x, float y) { seleccionarOpcion(o); }
+                @Override public void enter(InputEvent e, float x, float y, int p, Actor f) { l.setColor(skin.getColor("aguamarina")); }
+                @Override public void exit(InputEvent e, float x, float y, int p, Actor t) { l.setColor(Color.WHITE); }
+            });
+            tOpc.add(l).width(anchoCaja * 0.85f).padBottom(10).row();
+        }
+        contenedorPrincipal.setActor(tOpc);
+    }
+
+    private void seleccionarOpcion(OpcionDTO s) {
+        repository.guardarDecision(game.idUsuarioLogueado, s.idOpcion);
+        if (s.idLogro != null) {
+            if (repository.registrarLogro(game.idUsuarioLogueado, s.idLogro)) {
+                mostrarNotificacionLogro(repository.obtenerNombreLogro(s.idLogro));
+            }
+        }
+        idNarracionActual = s.idDestino;
+        cargarEscena(idNarracionActual);
+    }
+
+    private void gestionarMusica(String m) {
+        if (m == null || m.isEmpty() || m.equals(nombreMusicaActual)) return;
+        if (musicaActual != null) { musicaActual.stop(); musicaActual.dispose(); }
+        musicaActual = Gdx.audio.newMusic(Gdx.files.internal("musica/" + m));
+        musicaActual.setLooping(true); musicaActual.setVolume(0.4f); musicaActual.play();
+        nombreMusicaActual = m;
+    }
+
+    private void mostrarNotificacionLogro(String t) {
+        // AQUÍ SE UTILIZA EL SONIDO
+        if (sonidoLogro != null) sonidoLogro.play(0.6f);
+
+        final Table tl = new Table();
+        tl.setBackground(skin.getDrawable("textfield"));
+        tl.pad(15);
+        Label lblAviso = new Label("¡LOGRO CONSEGUIDO!", skin, "titulo");
+        lblAviso.setFontScale(0.6f);
+        Label lblNombre = new Label(t, skin);
+        tl.add(lblAviso).row();
+        tl.add(lblNombre).padTop(5);
+        tl.pack();
+        tl.setPosition(25, Gdx.graphics.getHeight() + 100);
+        stage.addActor(tl);
+        tl.addAction(Actions.sequence(
+            Actions.moveTo(25, Gdx.graphics.getHeight() - tl.getHeight() - 25, 0.7f, Interpolation.bounceOut),
+            Actions.delay(3.5f),
+            Actions.fadeOut(0.5f),
+            Actions.removeActor()
+        ));
+    }
+
+    private void mostrarDialogoSalida() {
+        Dialog dialogo = new Dialog("PAUSA", skin, "dialog") {
+            @Override
+            protected void result(Object object) {
+                int opcion = (Integer) object;
+                switch (opcion) {
+                    case 1: game.setScreen(new PantallaMenu(game)); break;
+                    case 2: game.setScreen(new PantallaLogin(game)); break;
+                    case 3: Gdx.app.exit(); break;
+                }
+            }
+        };
+
+        dialogo.text("¿Que deseas hacer?");
+        dialogo.button("Volver al Menu", 1);
+        dialogo.button("Cerrar Sesion", 2);
+        dialogo.button("Salir del Juego", 3);
+        dialogo.button("Cancelar", 4);
+        dialogo.show(stage);
+    }
+
+    private void comprobarFinal() { cargarEscena(repository.haElegidoOpcion(game.idUsuarioLogueado, 1) ? 7 : 8); }
+
+    @Override
+    public void render(float delta) {
+        ScreenUtils.clear(0.1f, 0.1f, 0.2f, 1);
+        
+        // AQUÍ LLAMAMOS AL MÉTODO (Esto quita el amarillo)
+        actualizarMaquinaEscribir(delta);
+
+        boolean hayDialogo = false;
+        for (Actor actor : stage.getActors()) {
+            if (actor instanceof Dialog) hayDialogo = true;
+        }
+
+        if (!hayDialogo) {
+            if (mostrandoOpciones) {
+                if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_1)) manejarTeclado(0);
+                if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_2)) manejarTeclado(1);
+                if (Gdx.input.isKeyJustPressed(Input.Keys.NUM_3)) manejarTeclado(2);
+                
+            } else if (Gdx.input.justTouched() || Gdx.input.isKeyJustPressed(Input.Keys.SPACE)) {
+                
+                if (escribiendo) {
+                    // Saltarse la animación
+                    escribiendo = false;
+                    etiquetaTexto.setText(textoCompleto);
+                    imgFlecha.setVisible(true);
+                } else {
+                    // Avanzar historia
+                    if (idSiguienteNarracion != null) {
+                        idNarracionActual = idSiguienteNarracion;
+                        cargarEscena(idNarracionActual);
+                    } else {
+                        mostrarOpciones();
+                    }
+                }
+            }
+        }
+
+        stage.act(delta);
+        stage.draw();
+    }
+
+    private void manejarTeclado(int i) {
+        List<OpcionDTO> l = repository.obtenerOpciones(idNarracionActual);
+        if (i < l.size()) seleccionarOpcion(l.get(i));
+    }
+
+    @Override public void resize(int w, int h) { stage.getViewport().update(w, h, true); }
+    @Override public void pause() {}
+    @Override public void resume() {}
+    @Override public void hide() { if (musicaActual != null) musicaActual.stop(); }
+    @Override public void dispose() {
+        stage.dispose();
+        if (musicaActual != null) musicaActual.dispose();
+        if (sonidoLogro != null) sonidoLogro.dispose(); 
+    }
 }

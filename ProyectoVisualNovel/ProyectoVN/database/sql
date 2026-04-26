@@ -37,6 +37,8 @@ CREATE TABLE USUARIO (
     Id_usuario INT PRIMARY KEY AUTO_INCREMENT,
     Nombre_usuario VARCHAR(50) UNIQUE,
     Password_usuario VARCHAR(100),
+    Pregunta_seguridad VARCHAR(255),
+    Respuesta_seguridad VARCHAR(255),
     Fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
     Ult_capitulo INT,
     FOREIGN KEY (Ult_capitulo) REFERENCES CAPITULO(Id_capitulo)
@@ -54,10 +56,11 @@ CREATE TABLE LOGRO (
 -- Relación muchos a muchos: Logros conseguidos por usuarios
 CREATE TABLE LOGRO_CONSEGUIDO (
     Id_logro_conseguido INT PRIMARY KEY AUTO_INCREMENT,
-    Id_usuario INT,
-    Id_logro INT,
-    Fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (Id_usuario) REFERENCES USUARIO(Id_usuario),
+    Id_usuario INT NOT NULL,
+    Id_logro INT NOT NULL,
+    Fecha TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY logro_unico_por_usuario (Id_usuario, Id_logro),
+    FOREIGN KEY (Id_usuario) REFERENCES USUARIO(Id_usuario),   
     FOREIGN KEY (Id_logro) REFERENCES LOGRO(Id_logro)
 );
 
